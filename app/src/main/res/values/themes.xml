@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.Tcic_android_simple_demo" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- 如果没有 MaterialComponents 库，可以使用下面这个 -->
+        <!-- <style name="Theme.Tcic_android_simple_demo" parent="Theme.AppCompat.Light.NoActionBar"> -->
 
-    <style name="Theme.Tcic_android_simple_demo" parent="android:Theme.Material.Light.NoActionBar" />
+        <!-- 自定义主题颜色 -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+    </style>
 </resources>

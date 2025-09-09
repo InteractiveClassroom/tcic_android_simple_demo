@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- App Bar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        app:title="课堂配置向导"
+        app:titleTextColor="@android:color/white">
+
+        <ImageButton
+            android:id="@+id/reset_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="重置"
+            android:padding="8dp"
+            android:src="@drawable/ic_refresh"
+            android:visibility="gone" />
+    </androidx.appcompat.widget.Toolbar>
+
+    <!-- Step Indicator -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="20dp"
+        android:gravity="center">
+
+        <!-- Step 1 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <View
+                android:id="@+id/step1_circle"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/circle_blue" />
+
+            <TextView
+                android:id="@+id/step1_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="配置参数"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Connector 1 -->
+        <View
+            android:id="@+id/connector1"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="30dp"
+            android:background="@color/gray_light" />
+
+        <!-- Step 2 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <View
+                android:id="@+id/step2_circle"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/circle_gray" />
+
+            <TextView
+                android:id="@+id/step2_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="创建课堂"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Connector 2 -->
+        <View
+            android:id="@+id/connector2"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="30dp"
+            android:background="@color/gray_light" />
+
+        <!-- Step 3 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <View
+                android:id="@+id/step3_circle"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/circle_gray" />
+
+            <TextView
+                android:id="@+id/step3_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="进入课堂"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Content Container -->
+    <FrameLayout
+        android:id="@+id/content_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>
