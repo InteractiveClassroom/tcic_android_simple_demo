@@ -5,11 +5,14 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.qcloudclass.tcic.TCICConfig
 import com.qcloudclass.tcic.TCICHeaderComponentConfig
 import com.qcloudclass.tcic.TCICManager
@@ -40,6 +43,13 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     private lateinit var appIdEditText: EditText
     private lateinit var createUserButton: Button
     private lateinit var progressBar: ProgressBar
+
+    // Step 3 views
+    private lateinit var classroomList: RecyclerView
+    private lateinit var refreshButton: Button
+
+    // Adapter for classroom list
+    private lateinit var classroomAdapter: ClassroomAdapter
 
     // State
     private var currentStepIndex = 0
@@ -270,25 +280,106 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.step_enter_classroom, contentContainer, false)
         contentContainer.addView(view)
 
-        val infoCard = view.findViewById<CardView>(R.id.info_card)
-        val userIdText = view.findViewById<TextView>(R.id.user_id_text)
-        val roomIdText = view.findViewById<TextView>(R.id.room_id_text)
-        val enterClassroomButton = view.findViewById<Button>(R.id.enter_classroom_button)
-        val resetButton = view.findViewById<Button>(R.id.reset_button_step3)
+        classroomList = view.findViewById(R.id.classroom_list)
+        refreshButton = view.findViewById(R.id.refresh_button_step3)
 
-        classroomInfo?.let { info ->
-            userIdText.text = "用户创建成功 ${info.userId}"
-            roomIdText.text = "课堂创建成功 ${info.roomId}"
+        // Initialize RecyclerView
+        classroomList.layoutManager = LinearLayoutManager(this)
+        classroomAdapter = ClassroomAdapter()
+        classroomList.adapter = classroomAdapter
+
+        // Load classroom list
+        loadClassroomList()
+
+        // Set refresh button click listener
+        refreshButton.setOnClickListener {
+            loadClassroomList()
         }
 
-        enterClassroomButton.setOnClickListener {
+        // Set enter classroom button click listener
+        view.findViewById<Button>(R.id.enter_classroom_button).setOnClickListener {
             handleEnterClassroom()
         }
+    }
 
-        resetButton.setOnClickListener {
-            showResetConfirmDialog()
+    private fun loadClassroomList() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    TCICCloudApi.getClassroomList()
+                }
+
+                if (response.hasError()) {
+                    showErrorMessage("获取课堂列表失败: ${response.errorMessage}")
+                    return@launch
+                }
+
+                classroomAdapter.submitList(response.classrooms)
+                classroomAdapter.selectedPosition = -1
+                updateEnterButtonState()
+                showSuccessMessage("课堂列表已刷新")
+
+            } catch (e: Exception) {
+                showErrorMessage("获取课堂列表失败: ${e.message}")
+            }
         }
     }
+
+    // Classroom Adapter
+    private inner class ClassroomAdapter : RecyclerView.Adapter<ClassroomAdapter.ClassroomViewHolder>() {
+        private var classrooms: List<Classroom> = emptyList()
+        var selectedPosition = -1
+
+        fun submitList(classrooms: List<Classroom>) {
+            this.classrooms = classrooms
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClassroomViewHolder {
+            val view = layoutInflater.inflate(R.layout.item_classroom, parent, false)
+            return ClassroomViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ClassroomViewHolder, position: Int) {
+            val classroom = classrooms[position]
+            holder.bind(classroom, position == selectedPosition)
+        }
+
+        override fun getItemCount(): Int = classrooms.size
+
+        inner class ClassroomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val nameText: TextView = itemView.findViewById(R.id.classroom_name)
+            private val idText: TextView = itemView.findViewById(R.id.classroom_id)
+
+            fun bind(classroom: Classroom, isSelected: Boolean) {
+                nameText.text = classroom.name
+                idText.text = "课堂ID: ${classroom.id}"
+                itemView.isSelected = isSelected
+                itemView.setBackgroundResource(if (isSelected) R.drawable.item_classroom_selector else 0)
+
+                itemView.setOnClickListener {
+                    selectedPosition = adapterPosition
+                    notifyDataSetChanged()
+                    updateEnterButtonState()
+                }
+            }
+        }
+
+        fun getSelectedClassroom(): Classroom? {
+            return if (selectedPosition != -1) classrooms[selectedPosition] else null
+        }
+    }
+
+    private fun updateEnterButtonState() {
+        val enterButton = findViewById<Button>(R.id.enter_classroom_button)
+        enterButton.isEnabled = classroomAdapter.getSelectedClassroom() != null
+    }
+
+    // Data class for classroom
+    data class Classroom(
+        val id: Int,
+        val name: String
+    )
 
     private fun handleConfiguration() {
         if (!validateConfigurationInputs()) return
@@ -368,16 +459,22 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     }
 
     private fun handleEnterClassroom() {
-        val info = classroomInfo ?: return
+        val selectedClassroom = classroomAdapter.getSelectedClassroom()
+        if (selectedClassroom == null) {
+            showErrorMessage("请选择一个课堂")
+            return
+        }
 
+        val info = classroomInfo ?: return
         val headerComponentConfig = TCICHeaderComponentConfig()
         headerComponentConfig.setHeaderLeftBuilder { HeaderLeftViewCreator() }
 
         val config = TCICConfig(
             info.token,
-            info.roomId.toString(),
+            selectedClassroom.id.toString(),
             info.userId,
         )
+        config.role = 1;
         config.headerComponentConfig = headerComponentConfig
 
         TCICManager.setConfig(config)

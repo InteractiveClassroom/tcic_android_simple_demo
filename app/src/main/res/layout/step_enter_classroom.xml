@@ -17,99 +17,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="课堂已创建成功，现在可以进入课堂。"
+        android:text="课堂已创建成功，请选择课堂进入。"
         android:textSize="16sp" />
 
-    <!-- Classroom Info Card -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/info_card"
+    <!-- Classroom List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/classroom_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        app:cardBackgroundColor="#E8F5E9"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="0dp"
-        app:strokeColor="#81C784"
-        app:strokeWidth="1dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_check_circle"
-                    android:tint="#388E3C" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="配置信息已保存"
-                    android:textColor="#000000" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_check_circle"
-                    android:tint="#388E3C" />
-
-                <TextView
-                    android:id="@+id/user_id_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="用户创建成功"
-                    android:textColor="#000000"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_check_circle"
-                    android:tint="#388E3C" />
-
-                <TextView
-                    android:id="@+id/room_id_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="课堂创建成功"
-                    android:textColor="#000000"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-            </LinearLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="20dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
 
     <!-- Action Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="20dp"
         android:orientation="horizontal">
 
         <Button
@@ -121,10 +46,10 @@
             android:text="进入课堂" />
 
         <Button
-            android:id="@+id/reset_button_step3"
+            android:id="@+id/refresh_button_step3"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:text="重置"
+            android:text="刷新列表"
             style="?attr/materialButtonOutlinedStyle" />
     </LinearLayout>
 </LinearLayout>

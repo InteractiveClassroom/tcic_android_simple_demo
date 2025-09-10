@@ -64,7 +64,7 @@ object TCICCloudApi {
         val action = "CreateRoom"
         val params = JSONObject().apply {
             put("SdkAppId", appId)
-            put("Name", "Demo Room ${System.currentTimeMillis()}")
+            put("Name", "Demo Room ${SimpleDateFormat("HH:mm").format(Date())}")
             put("StartTime", (System.currentTimeMillis() / 1000) + 10)
             put("EndTime", (System.currentTimeMillis() / 1000) + 3600)
             put("TeacherId", teacherId)
@@ -92,6 +92,45 @@ object TCICCloudApi {
                 }
             } else {
                 CreateRoomResponse(hasError = true, errorMessage = "请求失败")
+            }
+            continuation.resumeWith(Result.success(result))
+        }
+    }
+
+    suspend fun getClassroomList(): ClassroomListResponse = suspendCoroutine { continuation ->
+        val action = "GetRooms"
+        val params = JSONObject().apply {
+            put("SdkAppId", appId)
+        }
+
+        makeRequest(action, params) { response ->
+            val result = if (response != null) {
+                try {
+                    val responseObj = response.getJSONObject("Response")
+                    if (responseObj.has("Error")) {
+                        ClassroomListResponse(
+                            hasError = true,
+                            errorMessage = responseObj.getJSONObject("Error").getString("Message")
+                        )
+                    } else {
+                        val classrooms = mutableListOf<ClassroomSetupWizardActivity.Classroom>()
+                        val classroomsArray = responseObj.getJSONArray("Rooms")
+                        for (i in 0 until classroomsArray.length()) {
+                            val classroomObj = classroomsArray.getJSONObject(i)
+                            classrooms.add(
+                                ClassroomSetupWizardActivity.Classroom(
+                                    id = classroomObj.getInt("RoomId"),
+                                    name = classroomObj.getString("Name")
+                                )
+                            )
+                        }
+                        ClassroomListResponse(classrooms = classrooms)
+                    }
+                } catch (e: Exception) {
+                    ClassroomListResponse(hasError = true, errorMessage = e.message ?: "解析响应失败")
+                }
+            } else {
+                ClassroomListResponse(hasError = true, errorMessage = "请求失败")
             }
             continuation.resumeWith(Result.success(result))
         }
@@ -235,6 +274,15 @@ data class CreateRoomResponse(
     val hasError: Boolean = false,
     val errorMessage: String = "",
     val roomId: Int = 0
+) {
+    fun hasError() = hasError
+}
+
+// Response class for classroom list
+data class ClassroomListResponse(
+    val hasError: Boolean = false,
+    val errorMessage: String = "",
+    val classrooms: List<ClassroomSetupWizardActivity.Classroom> = emptyList()
 ) {
     fun hasError() = hasError
 }
