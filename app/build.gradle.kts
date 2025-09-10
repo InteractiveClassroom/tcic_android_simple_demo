@@ -71,6 +71,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.qcloudclass.tcic_client_module:flutter_release:1.0")
-    implementation("com.qcloudclass:tcic:1.0.9")
+    implementation("com.qcloudclass:tcic:1.0.10")
     implementation("io.flutter:flutter_embedding_release:1.0.0-18b71d647a292a980abb405ac7d16fe1f0b20434")
 }

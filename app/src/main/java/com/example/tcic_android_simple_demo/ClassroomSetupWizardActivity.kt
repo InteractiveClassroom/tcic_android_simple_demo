@@ -69,14 +69,14 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             override fun afterExitedClass() {
                 runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "已退出课堂，关闭页面", Toast.LENGTH_SHORT).show()
-                    TCICManager.closeFlutterActivity() // 关闭当前 Activity
+                    TCICManager.closeTCICActivity() // 关闭当前 Activity
                 }
             }
 
             override fun onJoinedClassFailed() {
                 runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "加入课堂失败", Toast.LENGTH_SHORT).show()
-                    TCICManager.closeFlutterActivity() // 关闭当前 Activity
+                    TCICManager.closeTCICActivity() // 关闭当前 Activity
                 }
             }
 
@@ -377,7 +377,6 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             info.token,
             info.roomId.toString(),
             info.userId,
-            1 // Teacher role
         )
         config.headerComponentConfig = headerComponentConfig
 
