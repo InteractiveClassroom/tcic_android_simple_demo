@@ -6,17 +6,30 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.qcloudclass.tcic.CustomLayoutType
 import com.qcloudclass.tcic.TCICConfig
+import com.qcloudclass.tcic.TCICCustomLayoutBuilderItem
 import com.qcloudclass.tcic.TCICHeaderComponentConfig
+import com.qcloudclass.tcic.TCICLayoutComponentConfig
 import com.qcloudclass.tcic.TCICManager
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.EnumMap
+
 
 class ClassroomSetupWizardActivity : AppCompatActivity() {
     companion object {
@@ -56,6 +69,9 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     private var isProcessing = false
     private var classroomInfo: ClassroomInfo? = null
     private val stepStatus = WizardStepStatus()
+
+    private val TAG: String = "TCICEVENT"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -134,6 +150,19 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+            }
+        })
+
+        TCICManager.setEventBusCallback(object: TCICManager.EventBusCallback {
+            override fun onEventReceived(params: MutableMap<String, Any>?) {
+                if (params != null) {
+                    val eventType = params["eventType"];
+                    val eventData = params["processedData"]
+                    if (eventType == "trtcSnapshotComplete") {
+                        Log.d(TAG, "Event Type$eventType");
+                        Log.d(TAG, "Event data$eventData");
+                    }
+                };
             }
         })
     }
@@ -382,13 +411,13 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     )
 
     private fun handleConfiguration() {
-        if (!validateConfigurationInputs()) return
+       if (!validateConfigurationInputs()) return
 
         setProcessing(true)
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                TCICCloudApi.setConfig(
+              TCICCloudApi.setConfig(
                     secretId = secretIdEditText.text.toString(),
                     secretKey = secretKeyEditText.text.toString(),
                     appId = appIdEditText.text.toString().toInt()
@@ -426,25 +455,25 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     }
 
     private fun handleClassroomCreation() {
-        val info = classroomInfo ?: return
+       val info = classroomInfo ?: return
 
         setProcessing(true)
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    TCICCloudApi.createRoom(teacherId = info.userId)
-                }
+               val response = withContext(Dispatchers.IO) {
+                   TCICCloudApi.createRoom(teacherId = info.userId)
+               }
 
-                if (response.hasError()) {
-                    showErrorMessage("创建课堂失败，${response.errorMessage}")
-                    return@launch
-                }
+               if (response.hasError()) {
+                   showErrorMessage("创建课堂失败，${response.errorMessage}")
+                   return@launch
+               }
 
                 stepStatus.isClassroomCreated = true
                 currentStepIndex = 2
 
-                classroomInfo = info.copy(roomId = response.roomId)
+               classroomInfo = info.copy(roomId = response.roomId)
 
                 updateStepIndicator()
                 showStep(2)
@@ -459,25 +488,44 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     }
 
     private fun handleEnterClassroom() {
-        val selectedClassroom = classroomAdapter.getSelectedClassroom()
-        if (selectedClassroom == null) {
-            showErrorMessage("请选择一个课堂")
-            return
-        }
+       val selectedClassroom = classroomAdapter.getSelectedClassroom()
+       if (selectedClassroom == null) {
+           showErrorMessage("请选择一个课堂")
+           return
+       }
 
-        val info = classroomInfo ?: return
+       val info = classroomInfo ?: return
         val headerComponentConfig = TCICHeaderComponentConfig()
         headerComponentConfig.setHeaderLeftBuilder { HeaderLeftViewCreator() }
 
-        val config = TCICConfig(
-            info.token,
-            selectedClassroom.id.toString(),
-            info.userId,
-        )
+       val config = TCICConfig(
+           info.token,
+           selectedClassroom.id.toString(),
+           info.userId,
+       )
         config.role = 1;
         config.headerComponentConfig = headerComponentConfig
 
+       var layoutComponentConfig = TCICLayoutComponentConfig();
+       layoutComponentConfig.isUseCustomLayout = true;
+       layoutComponentConfig.isVideoOnlyInPortrait = true;
+//
+       var customLayoutBuilders: Map<CustomLayoutType, TCICCustomLayoutBuilderItem> = EnumMap(com.qcloudclass.tcic.CustomLayoutType::class.java)
+       val headerBuilderItem = TCICCustomLayoutBuilderItem(100.0, 100.0)
+       headerBuilderItem.setBuilder{ HeaderViewCreator() }
+//
+        val footerBuilderItem = TCICCustomLayoutBuilderItem(100.0, 100.0)
+        footerBuilderItem.setBuilder{ FooterNativeViewCreator() }
+//
+       customLayoutBuilders += CustomLayoutType.HEADER to headerBuilderItem
+        customLayoutBuilders += CustomLayoutType.FOOTER to footerBuilderItem
+//
+       layoutComponentConfig.customLayoutBuilders = customLayoutBuilders
+        config.layoutComponentConfig = layoutComponentConfig;
+
         TCICManager.setConfig(config)
+        TCICManager.setLayoutOrientation("portrait");
+        
         val intent = TCICManager.getTCICIntent(this)
         startActivity(intent)
     }
