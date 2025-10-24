@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.qcloudclass.tcic.CustomLayoutType;
 import com.qcloudclass.tcic.NativeViewCreator;
+import com.qcloudclass.tcic.TCICBuilderItemAnimationType;
 import com.qcloudclass.tcic.TCICCustomLayoutBuilderItem;
 import com.qcloudclass.tcic.TCICManager;
 
@@ -257,9 +258,12 @@ public class WhiteBoardToolsViewCreator implements NativeViewCreator, LayoutMana
 
                         TCICCustomLayoutBuilderItem headerBuilderItem = new TCICCustomLayoutBuilderItem(100, 100);
                         headerBuilderItem.setBuilder(HeaderViewCreator::new);
+                        headerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_TOP);
 
                         TCICCustomLayoutBuilderItem footerBuilderItem = new TCICCustomLayoutBuilderItem(100, 100);
                         footerBuilderItem.setBuilder(FooterNativeViewCreator::new);
+                        footerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_BOTTOM);
+
                         // Header 布局
                         customLayoutBuilders.put(CustomLayoutType.HEADER, headerBuilderItem);
                         customLayoutBuilders.put(CustomLayoutType.FOOTER, footerBuilderItem);
@@ -268,7 +272,7 @@ public class WhiteBoardToolsViewCreator implements NativeViewCreator, LayoutMana
                         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                TCICManager.switchLayoutWithCustom("portrait", customLayoutBuilders);
+                                TCICManager.switchLayoutWithCustom("portrait", customLayoutBuilders, true);
 
                                 // 再次延迟更新布局状态，确保布局切换完成
                                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {

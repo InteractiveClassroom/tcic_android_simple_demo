@@ -68,7 +68,7 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.qcloudclass.tcic_client_module:flutter_debug:1.0.2")
-    implementation("com.qcloudclass:tcic:1.0.12")
+    implementation("com.qcloudclass.tcic_client_module:flutter_debug:1.0.4")
+    implementation("com.qcloudclass:tcic:1.0.13")
 //    implementation("io.flutter:flutter_embedding_release:1.0.0-ef0cd000916d64fa0c5d09cc809fa7ad244a5767")
 }

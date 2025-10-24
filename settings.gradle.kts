@@ -17,7 +17,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven("https://storage.googleapis.com/download.flutter.io")
-        maven("https://android.qcloudclass.com/repo?time=20251016")
+        maven("https://android.qcloudclass.com/repo?time=20251024")
         maven( "https://jitpack.io")
     }
 }

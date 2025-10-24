@@ -19,11 +19,13 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qcloudclass.tcic.CustomLayoutType
+import com.qcloudclass.tcic.TCICBuilderItemAnimationType
 import com.qcloudclass.tcic.TCICConfig
 import com.qcloudclass.tcic.TCICCustomLayoutBuilderItem
 import com.qcloudclass.tcic.TCICHeaderComponentConfig
 import com.qcloudclass.tcic.TCICLayoutComponentConfig
 import com.qcloudclass.tcic.TCICManager
+import com.qcloudclass.tcic.TCICVideoComponentConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -93,6 +95,7 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             }
 
             override fun afterExitedClass() {
+                Log.d(TAG, "afterExitedClass");
                 runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "已退出课堂，关闭页面", Toast.LENGTH_SHORT).show()
                     TCICManager.closeTCICActivity() // 关闭当前 Activity
@@ -133,13 +136,13 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             }
 
             override fun onRecivedMessage(message: Map<*, *>) {
-                runOnUiThread {
-                    Toast.makeText(
-                        this@ClassroomSetupWizardActivity,
-                        "收到消息: $message",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+//                runOnUiThread {
+//                    Toast.makeText(
+//                        this@ClassroomSetupWizardActivity,
+//                        "收到消息: $message",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                }
             }
 
             override fun onError(errorCode: String, errorMsg: String) {
@@ -284,7 +287,7 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         }
 
         createUserButton.setOnClickListener {
-            handleConfiguration()
+           handleConfiguration()
         }
     }
 
@@ -488,40 +491,48 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     }
 
     private fun handleEnterClassroom() {
-       val selectedClassroom = classroomAdapter.getSelectedClassroom()
-       if (selectedClassroom == null) {
-           showErrorMessage("请选择一个课堂")
-           return
-       }
+      val selectedClassroom = classroomAdapter.getSelectedClassroom()
+      if (selectedClassroom == null) {
+          showErrorMessage("请选择一个课堂")
+          return
+      }
 
-       val info = classroomInfo ?: return
+      val info = classroomInfo ?: return
         val headerComponentConfig = TCICHeaderComponentConfig()
-        headerComponentConfig.setHeaderLeftBuilder { HeaderLeftViewCreator() }
 
-       val config = TCICConfig(
-           info.token,
-           selectedClassroom.id.toString(),
-           info.userId,
-       )
+      val config = TCICConfig(
+          info.token,
+          selectedClassroom.id.toString(),
+          info.userId,
+      )
+      
         config.role = 1;
         config.headerComponentConfig = headerComponentConfig
 
        var layoutComponentConfig = TCICLayoutComponentConfig();
        layoutComponentConfig.isUseCustomLayout = true;
-       layoutComponentConfig.isVideoOnlyInPortrait = true;
+       layoutComponentConfig.isVideoOnly = true;
+        layoutComponentConfig.setClickHideCustomLayout(true);
+
+        var videoCompoentConfig = TCICVideoComponentConfig();
+        videoCompoentConfig.setShowVolumeAnimation(false);
 //
        var customLayoutBuilders: Map<CustomLayoutType, TCICCustomLayoutBuilderItem> = EnumMap(com.qcloudclass.tcic.CustomLayoutType::class.java)
        val headerBuilderItem = TCICCustomLayoutBuilderItem(100.0, 100.0)
        headerBuilderItem.setBuilder{ HeaderViewCreator() }
+        headerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_TOP);
 //
         val footerBuilderItem = TCICCustomLayoutBuilderItem(100.0, 100.0)
         footerBuilderItem.setBuilder{ FooterNativeViewCreator() }
+        footerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_BOTTOM);
+
 //
        customLayoutBuilders += CustomLayoutType.HEADER to headerBuilderItem
         customLayoutBuilders += CustomLayoutType.FOOTER to footerBuilderItem
 //
        layoutComponentConfig.customLayoutBuilders = customLayoutBuilders
         config.layoutComponentConfig = layoutComponentConfig;
+        config.videoComponentConfig = videoCompoentConfig;
 
         TCICManager.setConfig(config)
         TCICManager.setLayoutOrientation("portrait");

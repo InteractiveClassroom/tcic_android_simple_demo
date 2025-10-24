@@ -225,9 +225,9 @@ public class FooterNativeViewCreator implements NativeViewCreator, LayoutManager
             @Override
             public void run() {
                 try {
-                    TCICManager.endClass();
                     TCICManager.quitClass();
                     Toast.makeText(context, "通话已挂断", Toast.LENGTH_SHORT).show();
+                    TCICManager.closeTCICActivity();
                     // 这里可以添加实际的挂断逻辑
                 } catch (Exception e) {
                     Toast.makeText(context, "挂断操作失败", Toast.LENGTH_SHORT).show();

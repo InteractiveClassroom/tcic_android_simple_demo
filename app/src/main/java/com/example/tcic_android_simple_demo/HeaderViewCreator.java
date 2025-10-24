@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.qcloudclass.tcic.CustomLayoutType;
 import com.qcloudclass.tcic.NativeViewCreator;
+import com.qcloudclass.tcic.TCICBuilderItemAnimationType;
 import com.qcloudclass.tcic.TCICConfig;
 import com.qcloudclass.tcic.TCICCustomLayoutBuilderItem;
 import com.qcloudclass.tcic.TCICLayoutComponentConfig;
@@ -35,11 +36,17 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
     private LinearLayout settingsLayout;
     private LinearLayout exitLayout;
     private Context context;
+    private int viewId;
+    private boolean isDisposed = false;
+
+
 
     @Override
     public View createView(Context context, int id, Object args) {
+        this.isDisposed = false;
         this.context = context;
         this.mainLayout = new LinearLayout(context);
+        this.viewId = id;
         
         Log.d(TAG, "=== HeaderViewCreator 创建视图 ===");
         
@@ -49,14 +56,11 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
         mainLayout.setBackgroundColor(Color.parseColor("#FF4444"));
         mainLayout.setPadding(dp2px(context, 16), dp2px(context, 16), dp2px(context, 16), dp2px(context, 16));
 
-        // 创建按钮布局
-        createButtonLayouts();
+        // 创建竖屏模式下的按钮布局
+        createPortraitButtonLayouts();
         
         // 注册布局变化监听器
         LayoutManager.addLayoutChangeListener(this);
-        
-        // 根据当前状态调整布局
-        adjustLayoutForOrientation();
         
         // 10秒后自动切换到横屏（仅在竖屏模式下执行一次）
 //        if (!LayoutManager.isLandscape()) {
@@ -85,26 +89,26 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
     @Override
     public void onLayoutChanged(boolean isLandscape) {
         Log.d(TAG, "收到布局变化通知: isLandscape = " + isLandscape);
-        adjustLayoutForOrientation();
+        // 竖屏模式下不需要处理布局变化，因为已经是竖屏布局
     }
     
     /**
-     * 创建按钮布局
+     * 创建竖屏模式下的按钮布局
      */
-    private void createButtonLayouts() {
-        // 创建录制按钮
-        titleLayout = createButtonWithIcon(context,
+    private void createPortraitButtonLayouts() {
+        // 创建录制按钮 - 竖屏模式
+        titleLayout = createPortraitButtonWithIcon(context,
                 android.R.drawable.ic_menu_agenda, "录制", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        TCICManager.startScreenRecording();
+                        TCICManager.toggleScreenRecording();
                     }
                 }
         );
         mainLayout.addView(titleLayout);
 
-        // 创建旋转按钮
-        settingsLayout = createButtonWithIcon(context,
+        // 创建旋转按钮 - 竖屏模式
+        settingsLayout = createPortraitButtonWithIcon(context,
                 android.R.drawable.ic_menu_preferences, "旋转", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -114,8 +118,8 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
         );
         mainLayout.addView(settingsLayout);
 
-        // 创建白板按钮
-        exitLayout = createButtonWithIcon(context,
+        // 创建白板按钮 - 竖屏模式
+        exitLayout = createPortraitButtonWithIcon(context,
                 android.R.drawable.ic_menu_close_clear_cancel, "白板", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -124,91 +128,25 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
                 }
         );
         mainLayout.addView(exitLayout);
+        
+        // 设置竖屏模式下的布局参数
+        setPortraitLayoutParams();
     }
     
     /**
-     * 根据屏幕方向调整布局
+     * 设置竖屏模式下的布局参数
      */
-    private void adjustLayoutForOrientation() {
-        if (mainLayout == null || context == null) {
-            return;
-        }
-        
-        // 获取当前布局状态
-        boolean isLandscape = LayoutManager.isLandscape();
-        
-        Log.d(TAG, "=== 调整布局 ===");
-        Log.d(TAG, "当前横屏状态: " + isLandscape);
-        
-        // 根据屏幕方向设置布局方向：竖屏时横向布局，横屏时纵向布局
-        if (!isLandscape) {
-            mainLayout.setOrientation(LinearLayout.HORIZONTAL);
-            mainLayout.setGravity(Gravity.CENTER_VERTICAL);
-        } else {
-            mainLayout.setOrientation(LinearLayout.VERTICAL);
-            mainLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-        }
-        
-        // 根据屏幕方向创建等分布局参数
-        LinearLayout.LayoutParams equalParams;
-        if (!isLandscape) {
-            // 竖屏时横向等分
-            equalParams = new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f
-            );
-            equalParams.setMargins(dp2px(context, 4), 0, dp2px(context, 4), 0);
-        } else {
-            // 横屏时纵向等分
-            equalParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 0, 1.0f
-            );
-            equalParams.setMargins(0, dp2px(context, 4), 0, dp2px(context, 4));
-        }
+    private void setPortraitLayoutParams() {
+        // 竖屏时横向等分
+        LinearLayout.LayoutParams equalParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f
+        );
+        equalParams.setMargins(dp2px(context, 4), 0, dp2px(context, 4), 0);
         
         // 更新所有按钮的布局参数
         if (titleLayout != null) titleLayout.setLayoutParams(equalParams);
         if (settingsLayout != null) settingsLayout.setLayoutParams(equalParams);
         if (exitLayout != null) exitLayout.setLayoutParams(equalParams);
-        
-        // 重新调整按钮内部布局
-        adjustButtonInternalLayout(titleLayout, isLandscape);
-        adjustButtonInternalLayout(settingsLayout, isLandscape);
-        adjustButtonInternalLayout(exitLayout, isLandscape);
-        
-        // 请求重新布局
-        mainLayout.requestLayout();
-    }
-    
-    /**
-     * 调整按钮内部布局
-     */
-    private void adjustButtonInternalLayout(LinearLayout buttonLayout, boolean isLandscape) {
-        if (buttonLayout.getChildCount() >= 2) {
-            ImageView icon = (ImageView) buttonLayout.getChildAt(0);
-            
-            // 根据屏幕方向设置按钮内部布局
-            if (isLandscape) {
-                Log.d(TAG, "按钮横屏布局: HORIZONTAL方向，图标在左文字在右");
-                // 横屏时按钮内部横向布局（图标在左，文字在右）
-                buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-                buttonLayout.setGravity(Gravity.CENTER_VERTICAL);
-                
-                // 调整图标边距
-                LinearLayout.LayoutParams iconParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
-                iconParams.setMargins(0, 0, dp2px(context, 8), 0);
-                icon.setLayoutParams(iconParams);
-            } else {
-                Log.d(TAG, "按钮竖屏布局: VERTICAL方向，图标在上文字在下");
-                // 竖屏时按钮内部纵向布局（图标在上，文字在下）
-                buttonLayout.setOrientation(LinearLayout.VERTICAL);
-                buttonLayout.setGravity(Gravity.CENTER);
-                
-                // 调整图标边距
-                LinearLayout.LayoutParams iconParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
-                iconParams.setMargins(0, 0, 0, dp2px(context, 4));
-                icon.setLayoutParams(iconParams);
-            }
-        }
     }
     
     /**
@@ -228,36 +166,38 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
             public void run() {
                 try {
                     // 检测当前屏幕方向并切换到相反方向
-                    int currentOrientation = context.getResources().getConfiguration().orientation;
-                    if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        // 当前是横屏，切换到竖屏
-                        Map<CustomLayoutType, TCICCustomLayoutBuilderItem> customLayoutBuilders = new HashMap<>();
-
-                        TCICCustomLayoutBuilderItem headerBuilderItem = new TCICCustomLayoutBuilderItem(100, 100);
-                        headerBuilderItem.setBuilder(HeaderViewCreator::new);
-
-                        TCICCustomLayoutBuilderItem footerBuilderItem = new TCICCustomLayoutBuilderItem(100, 100);
-                        footerBuilderItem.setBuilder(FooterNativeViewCreator::new);
-                        // Header 布局
-                        customLayoutBuilders.put(CustomLayoutType.HEADER, headerBuilderItem);
-                        customLayoutBuilders.put(CustomLayoutType.FOOTER, footerBuilderItem);
-
-                        // 延迟切换布局状态，避免在布局切换过程中立即通知
-                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                TCICManager.switchLayoutWithCustom("portrait", customLayoutBuilders);
-                                
-                                // 再次延迟更新布局状态，确保布局切换完成
-                                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        LayoutManager.setLandscape(false);
-                                    }
-                                }, 100);
-                            }
-                        }, 50);
-                    } else {
+//                    int currentOrientation = context.getResources().getConfiguration().orientation;
+//                    if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+//                        // 当前是横屏，切换到竖屏
+//                        Map<CustomLayoutType, TCICCustomLayoutBuilderItem> customLayoutBuilders = new HashMap<>();
+//
+//                        TCICCustomLayoutBuilderItem headerBuilderItem = new TCICCustomLayoutBuilderItem(100, 100);
+//                        headerBuilderItem.setBuilder(HeaderViewLandscapeCreator::new);
+//                        footerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_BOTTOM);
+//
+//                        TCICCustomLayoutBuilderItem footerBuilderItem = new TCICCustomLayoutBuilderItem(100, 100);
+//                        footerBuilderItem.setBuilder(FooterNativeViewCreator::new);
+//                        footerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_RIGHT);
+//                        // Header 布局
+//                        customLayoutBuilders.put(CustomLayoutType.HEADER, headerBuilderItem);
+//                        customLayoutBuilders.put(CustomLayoutType.FOOTER, footerBuilderItem);
+//
+//                        // 延迟切换布局状态，避免在布局切换过程中立即通知
+//                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                TCICManager.switchLayoutWithCustom("portrait", customLayoutBuilders);
+//
+//                                // 再次延迟更新布局状态，确保布局切换完成
+//                                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        LayoutManager.setLandscape(false);
+//                                    }
+//                                }, 100);
+//                            }
+//                        }, 50);
+//                    } else {
                         // 获取横屏模式下的屏幕高度
                         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
                         int landscapeHeightPx = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels);
@@ -266,14 +206,16 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
                         float density = displayMetrics.density;
                         int layoutHeight = (int) (landscapeHeightPx / density);
 
-                        // 创建自定义布局构建器
+                        // 创建自定义布局构建器 - 使用横屏专用的HeaderViewLandscapeCreator
                         Map<CustomLayoutType, TCICCustomLayoutBuilderItem> customLayoutBuilders = new HashMap<>();
 
                         TCICCustomLayoutBuilderItem leftBuilderItem = new TCICCustomLayoutBuilderItem(100, layoutHeight);
-                        leftBuilderItem.setBuilder(HeaderViewCreator::new);
+                        leftBuilderItem.setBuilder(HeaderViewLandscapeCreator::new);
+                        leftBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_LEFT);
 
                         TCICCustomLayoutBuilderItem footerBuilderItem = new TCICCustomLayoutBuilderItem(100, layoutHeight);
                         footerBuilderItem.setBuilder(FooterNativeViewCreator::new);
+                        footerBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_RIGHT);
 
                         customLayoutBuilders.put(CustomLayoutType.TOP_LEFT, leftBuilderItem);
                         customLayoutBuilders.put(CustomLayoutType.TOP_RIGHT, footerBuilderItem);
@@ -294,7 +236,7 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
                                 }, 100);
                             }
                         }, 50);
-                    }
+//                    }
                 } catch (Exception e) {
                     // 捕获异常，避免崩溃
                     Toast.makeText(context, "旋转操作失败，请稍后重试", Toast.LENGTH_SHORT).show();
@@ -321,13 +263,14 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
         TCICCustomLayoutBuilderItem whiteBoardBuilderItem = new TCICCustomLayoutBuilderItem(100, layoutHeight);
         // 这里可以添加具体的白板布局逻辑
         whiteBoardBuilderItem.setBuilder(WhiteBoardToolsViewCreator::new);
+        whiteBoardBuilderItem.setAnimationType(TCICBuilderItemAnimationType.SLIDE_FROM_RIGHT);
         customLayoutBuilders.put(CustomLayoutType.TOP_RIGHT, whiteBoardBuilderItem);
 
-        TCICManager.snapshotLocalVideo();
+//        TCICManager.snapshotLocalVideo();
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                TCICManager.switchLayoutWithCustom("landscape", customLayoutBuilders);
+                TCICManager.switchLayoutWithCustom("landscape", customLayoutBuilders, false);
 
                 // 再次延迟更新布局状态，确保布局切换完成
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
@@ -340,11 +283,13 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
         }, 50);
     }
 
-    // 创建带图标的按钮布局
-    private LinearLayout createButtonWithIcon(Context context, int iconResId, String text, View.OnClickListener listener) {
+    /**
+     * 创建竖屏模式下的带图标按钮
+     */
+    private LinearLayout createPortraitButtonWithIcon(Context context, int iconResId, String text, View.OnClickListener listener) {
         LinearLayout buttonLayout = new LinearLayout(context);
 
-        // 初始设置为纵向布局（默认竖屏状态）
+        // 竖屏模式：纵向布局，图标在上文字在下
         buttonLayout.setOrientation(LinearLayout.VERTICAL);
         buttonLayout.setGravity(Gravity.CENTER);
         buttonLayout.setBackgroundColor(Color.TRANSPARENT);
@@ -357,8 +302,7 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
                 dp2px(context, 24), dp2px(context, 24)
         );
-        // 初始设置为竖屏时的下边距
-        iconParams.setMargins(0, 0, 0, dp2px(context, 4));
+        iconParams.setMargins(0, 0, 0, dp2px(context, 4)); // 竖屏时下边距
         icon.setLayoutParams(iconParams);
         buttonLayout.addView(icon);
 
@@ -382,7 +326,12 @@ public class HeaderViewCreator implements NativeViewCreator, LayoutManager.Layou
 
     @Override
     public void disposeView(View view) {
-        Log.d(TAG, "disposeView 被调用");
+        Log.d(TAG, "disposeView 被调用" + viewId);
+        if(isDisposed) {
+            Log.d(TAG, "View " + this.viewId + " already disposed. Ignoring call.");
+            return;
+        }
+                isDisposed = true;
         
         // 移除布局变化监听器
         LayoutManager.removeLayoutChangeListener(this);
