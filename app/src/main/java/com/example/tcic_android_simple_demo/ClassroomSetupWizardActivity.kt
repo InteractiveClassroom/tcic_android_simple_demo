@@ -13,8 +13,12 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.qcloudclass.tcic.BoardStreamConfig
+import com.qcloudclass.tcic.TCICBasicConfig
+import com.qcloudclass.tcic.TCICBoardConfig
 import com.qcloudclass.tcic.TCICConfig
 import com.qcloudclass.tcic.TCICHeaderComponentConfig
+import com.qcloudclass.tcic.TCICLayoutConfig
 import com.qcloudclass.tcic.TCICManager
 import kotlinx.coroutines.*
 
@@ -70,6 +74,13 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     private fun initTCICSDK() {
         TCICManager.initialize(this);
         TCICManager.setCallback(object : TCICManager.TCICCallback {
+            override fun onClassEnded() {
+                TODO("Not yet implemented")
+            }
+
+            override fun onClassStarted() {
+                TODO("Not yet implemented")
+            }
             override fun onJoinedClassSuccess() {
                 runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "加入课堂成功", Toast.LENGTH_SHORT).show()
@@ -476,6 +487,20 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         )
         config.role = 1;
         config.headerComponentConfig = headerComponentConfig
+
+        // 设置布局
+        val layoutConfig = TCICLayoutConfig();
+        layoutConfig.landscapeLayoutConfig = TCICLayoutConfig.LandscapeLayoutConfig(TCICLayoutConfig.TLayoutPosition.TOP);
+        // config.layoutConfig = layoutConfig;
+
+        // 设置白板播放流
+        val boardConfig = TCICBoardConfig();
+        boardConfig.boardStreamConfig = BoardStreamConfig("");
+        // config.boardConfig = boardConfig;
+
+        // 设置basicConfig
+        val basicConfig = TCICBasicConfig(true,true,false);
+        // config.basicConfig = basicConfig;
 
         TCICManager.setConfig(config)
         val intent = TCICManager.getTCICIntent(this)
