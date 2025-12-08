@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qcloudclass.tcic.BoardStreamConfig
+import com.qcloudclass.tcic.LandscapeLayoutConfig
 import com.qcloudclass.tcic.TCICBasicConfig
 import com.qcloudclass.tcic.TCICBoardConfig
 import com.qcloudclass.tcic.TCICConfig
@@ -489,8 +490,9 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         config.headerComponentConfig = headerComponentConfig
 
         // 设置布局
-        val layoutConfig = TCICLayoutConfig();
-        layoutConfig.landscapeLayoutConfig = TCICLayoutConfig.LandscapeLayoutConfig(TCICLayoutConfig.TLayoutPosition.TOP);
+//        val layoutConfig = TCICLayoutConfig();
+//        var landscapeLayoutConfig = LandscapeLayoutConfig();
+//        layoutConfig.landscapeLayoutConfig = LandscapeLayoutConfig();
         // config.layoutConfig = layoutConfig;
 
         // 设置白板播放流
