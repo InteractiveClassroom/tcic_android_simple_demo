@@ -65,8 +65,8 @@ object TCICCloudApi {
         val params = JSONObject().apply {
             put("SdkAppId", appId)
             put("Name", "Demo Room ${SimpleDateFormat("HH:mm").format(Date())}")
-            put("StartTime", (System.currentTimeMillis() / 1000) + 10)
-            put("EndTime", (System.currentTimeMillis() / 1000) + 3600)
+            put("StartTime", System.currentTimeMillis() / 1000 + 60)
+            put("EndTime", System.currentTimeMillis() / 1000 + 3600)
             put("TeacherId", teacherId)
             put("Resolution", 1)
             put("MaxMicNumber", 6)
@@ -99,8 +99,20 @@ object TCICCloudApi {
 
     suspend fun getClassroomList(): ClassroomListResponse = suspendCoroutine { continuation ->
         val action = "GetRooms"
+        val currentTime = System.currentTimeMillis() / 1000
         val params = JSONObject().apply {
             put("SdkAppId", appId)
+            put("StartTime", currentTime - 86400)  // 前24小时
+            put("EndTime", currentTime + 86400)    // 后24小时
+            put("Page", 1)
+            put("Limit", 100)
+            // 查询所有状态的课堂: 0-未开始, 1-正在上课, 2-已结束, 3-已过期
+            put("Status", org.json.JSONArray().apply {
+                put(0)
+                put(1)
+                put(2)
+                put(3)
+            })
         }
 
         makeRequest(action, params) { response ->

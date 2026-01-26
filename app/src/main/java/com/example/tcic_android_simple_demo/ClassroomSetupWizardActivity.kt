@@ -1,5 +1,6 @@
 package com.example.tcic_android_simple_demo
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,14 +14,13 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.qcloudclass.tcic.BoardStreamConfig
-import com.qcloudclass.tcic.LandscapeLayoutConfig
 import com.qcloudclass.tcic.TCICBasicConfig
-import com.qcloudclass.tcic.TCICBoardConfig
 import com.qcloudclass.tcic.TCICConfig
+import com.qcloudclass.tcic.TCICFooterComponentConfig
 import com.qcloudclass.tcic.TCICHeaderComponentConfig
-import com.qcloudclass.tcic.TCICLayoutConfig
+import com.qcloudclass.tcic.TCICMainViewComponentConfig
 import com.qcloudclass.tcic.TCICManager
+import com.qcloudclass.tcic.TCICMembersComponentConfig
 import kotlinx.coroutines.*
 
 class ClassroomSetupWizardActivity : AppCompatActivity() {
@@ -28,6 +28,10 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         private const val TOTAL_STEPS = 3
         private const val DOCUMENTATION_URL =
             "https://cloud.tencent.com/document/product/1639/79895#9b6257f6-95c7-4f5d-9eee-76edd86f80f7"
+        private const val PREFS_NAME = "tcic_config_prefs"
+        private const val KEY_SECRET_ID = "secret_id"
+        private const val KEY_SECRET_KEY = "secret_key"
+        private const val KEY_APP_ID = "app_id"
     }
 
     // UI Components
@@ -73,14 +77,25 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
     }
 
     private fun initTCICSDK() {
-        TCICManager.initialize(this);
+        TCICManager.initialize(this)
+        
+        // 设置UI事件回调，监听按钮点击（如横竖屏切换按钮）
+        TCICManager.setUIEventCallback { eventName, widgetId, data ->
+            Log.d("TCIC", "Received UI Event: $eventName, widgetId: $widgetId")
+            if (eventName == "switchLayoutOrientation") {
+                // 调用SDK方法切换横竖屏
+                TCICManager.switchLayoutOrientation()
+            }
+        }
+        
         TCICManager.setCallback(object : TCICManager.TCICCallback {
             override fun onClassEnded() {
-                TODO("Not yet implemented")
+                // 课堂结束
             }
 
             override fun onClassStarted() {
-                TODO("Not yet implemented")
+                // 课堂开始，更新mainViewComponentConfig（清除课前等待界面）
+                TCICManager.updateMainViewComponentConfig(null)
             }
             override fun onJoinedClassSuccess() {
                 runOnUiThread {
@@ -91,14 +106,14 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             override fun afterExitedClass() {
                 runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "已退出课堂，关闭页面", Toast.LENGTH_SHORT).show()
-                    TCICManager.closeTCICActivity() // 关闭当前 Activity
+                    TCICManager.closeTCICActivity()
                 }
             }
 
             override fun onJoinedClassFailed() {
                 runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "加入课堂失败", Toast.LENGTH_SHORT).show()
-                    TCICManager.closeTCICActivity() // 关闭当前 Activity
+                    TCICManager.closeTCICActivity()
                 }
             }
 
@@ -261,6 +276,9 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         createUserButton = view.findViewById(R.id.create_user_button)
         progressBar = view.findViewById(R.id.progress_bar)
 
+        // 从缓存恢复配置
+        loadCachedConfig()
+
         val documentationLink = view.findViewById<TextView>(R.id.documentation_link)
         documentationLink.setOnClickListener {
             openDocumentation()
@@ -268,6 +286,25 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
 
         createUserButton.setOnClickListener {
             handleConfiguration()
+        }
+    }
+
+    private fun loadCachedConfig() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        secretIdEditText.setText(prefs.getString(KEY_SECRET_ID, ""))
+        secretKeyEditText.setText(prefs.getString(KEY_SECRET_KEY, ""))
+        val appId = prefs.getInt(KEY_APP_ID, 0)
+        if (appId > 0) {
+            appIdEditText.setText(appId.toString())
+        }
+    }
+
+    private fun saveConfigToCache(secretId: String, secretKey: String, appId: Int) {
+        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().apply {
+            putString(KEY_SECRET_ID, secretId)
+            putString(KEY_SECRET_KEY, secretKey)
+            putInt(KEY_APP_ID, appId)
+            apply()
         }
     }
 
@@ -398,12 +435,16 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
 
         setProcessing(true)
 
+        val secretId = secretIdEditText.text.toString()
+        val secretKey = secretKeyEditText.text.toString()
+        val appId = appIdEditText.text.toString().toInt()
+
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 TCICCloudApi.setConfig(
-                    secretId = secretIdEditText.text.toString(),
-                    secretKey = secretKeyEditText.text.toString(),
-                    appId = appIdEditText.text.toString().toInt()
+                    secretId = secretId,
+                    secretKey = secretKey,
+                    appId = appId
                 )
 
                 val response = withContext(Dispatchers.IO) {
@@ -415,6 +456,9 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
                     showErrorMessage("注册失败，${response.errorMessage}")
                     return@launch
                 }
+
+                // 注册成功后保存配置到缓存
+                saveConfigToCache(secretId, secretKey, appId)
 
                 stepStatus.isConfigurationCompleted = true
                 currentStepIndex = 1
@@ -478,32 +522,125 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         }
 
         val info = classroomInfo ?: return
+        
+        // 配置头部组件 - 与iOS保持一致
         val headerComponentConfig = TCICHeaderComponentConfig()
-        headerComponentConfig.setHeaderLeftBuilder { HeaderLeftViewCreator() }
+        headerComponentConfig.isShowClassInfo = false
+        headerComponentConfig.isShowNetworkStatus = false
+        headerComponentConfig.isShowClassLogo = false
+        headerComponentConfig.isShowQuitButton = false
+        headerComponentConfig.isShowLeftQuitButton = true
+        headerComponentConfig.portraitHeaderLayout = 0
 
         val config = TCICConfig(
             info.token,
             selectedClassroom.id.toString(),
             info.userId,
         )
-        config.role = 1;
+        config.role = 1
         config.headerComponentConfig = headerComponentConfig
 
-        // 设置布局
-//        val layoutConfig = TCICLayoutConfig();
-//        var landscapeLayoutConfig = LandscapeLayoutConfig();
-//        layoutConfig.landscapeLayoutConfig = LandscapeLayoutConfig();
-        // config.layoutConfig = layoutConfig;
+        // 设置basicConfig - 与iOS保持一致
+        val basicConfig = TCICBasicConfig(
+            false,  // autoStartClass
+            true,   // allowEarlyEnter
+            true    // allowPipMode
+        )
+        basicConfig.setTeacherVideoFloating(true);
+        config.basicConfig = basicConfig
 
-        // 设置白板播放流
-        val boardConfig = TCICBoardConfig();
-        boardConfig.boardStreamConfig = BoardStreamConfig("");
-        // config.boardConfig = boardConfig;
+        // 设置mainViewComponentConfig - 自定义课前等待界面
+        val mainViewBuilderJson = """
+        {
+          "widget": "Box",
+          "padding": 16,
+          "backgroundImage": {
+            "src": "https://tcic-prod-1257307760.qcloudclass.com/doc/gqc7lpugu87e0sruvl2d_tiw/thumbnail/1.jpg",
+            "fit": "fill"
+          },
+          "child": {
+            "widget": "Center",
+            "child": {
+              "widget": "Column",
+              "gap": 18,
+              "align": "center",
+              "mainAxisSize": "min",
+              "crossAlign": "center",
+              "children": [
+                {
+                  "widget": "Text",
+                  "fontSize": 18,
+                  "text": "老师：小张",
+                  "color": "#D9FFFFFF"
+                },
+                {
+                  "widget": "Text",
+                  "fontSize": 16,
+                  "color": "#D9FFFFFF",
+                  "text": "腾讯云互动课堂测试"
+                },
+                {
+                  "widget": "Text",
+                  "fontSize": 14,
+                  "color": "#D9FFFFFF",
+                  "text": "上课时间: 121312313"
+                }
+              ]
+            }
+          }
+        }
+        """.trimIndent()
+        val mainViewComponentConfig = TCICMainViewComponentConfig()
+        mainViewComponentConfig.builderJson = mainViewBuilderJson
+        config.mainViewComponentConfig = mainViewComponentConfig
 
-        // 设置basicConfig
-        val basicConfig = TCICBasicConfig(true,true,false);
-        // config.basicConfig = basicConfig;
+        // 设置footerComponentConfig - 添加横竖屏切换按钮
+        val footerBuilderJson = """
+        {
+          "widget": "Row",
+          "crossAlign": "end",
+          "children": [
+            {
+              "widget": "Slot",
+              "name": "footer"
+            },
+            {
+              "widget": "SizedBox",
+              "width": 10
+            },
+            {
+              "widget": "Box",
+              "width": 35,
+              "height": 35,
+              "corners": 8,
+              "background": "#1C2333",
+              "alignment": "center",
+              "child": {
+                "widget": "Touchable",
+                "id": "node_1769156273090_692060913",
+                "onClick": "switchLayoutOrientation",
+                "child": {
+                  "widget": "Icon",
+                  "icon": "screen_rotation_rounded",
+                  "size": 20,
+                  "color": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "widget": "SizedBox",
+              "width": 10
+            }
+          ]
+        }
+        """.trimIndent()
+        val footerComponentConfig = TCICFooterComponentConfig()
+        footerComponentConfig.footerBuilderJson = footerBuilderJson
+        config.footerComponentConfig = footerComponentConfig
 
+        val memberListComponentConfig = TCICMembersComponentConfig();
+        memberListComponentConfig.teacherRoleBackgroundColor = "#ff0000";
+        config.membersComponentConfig = memberListComponentConfig;
         TCICManager.setConfig(config)
         val intent = TCICManager.getTCICIntent(this)
         startActivity(intent)
