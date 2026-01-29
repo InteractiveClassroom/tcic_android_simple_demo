@@ -71,6 +71,7 @@ object TCICCloudApi {
             put("Resolution", 1)
             put("MaxMicNumber", 6)
             put("SubType", "videodoc")
+            put("VideoOrientation", 0)
         }
 
         makeRequest(action, params) { response ->

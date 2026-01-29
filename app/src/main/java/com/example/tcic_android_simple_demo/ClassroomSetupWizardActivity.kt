@@ -546,7 +546,7 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             true,   // allowEarlyEnter
             true    // allowPipMode
         )
-        basicConfig.setTeacherVideoFloating(true);
+        basicConfig.setTeacherVideoFloating(false);
         config.basicConfig = basicConfig
 
         // 设置mainViewComponentConfig - 自定义课前等待界面
