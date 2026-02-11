@@ -594,50 +594,6 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         mainViewComponentConfig.builderJson = mainViewBuilderJson
         config.mainViewComponentConfig = mainViewComponentConfig
 
-        // 设置footerComponentConfig - 添加横竖屏切换按钮
-        val footerBuilderJson = """
-        {
-          "widget": "Row",
-          "crossAlign": "end",
-          "children": [
-            {
-              "widget": "Slot",
-              "name": "footer"
-            },
-            {
-              "widget": "SizedBox",
-              "width": 10
-            },
-            {
-              "widget": "Box",
-              "width": 35,
-              "height": 35,
-              "corners": 8,
-              "background": "#1C2333",
-              "alignment": "center",
-              "child": {
-                "widget": "Touchable",
-                "id": "node_1769156273090_692060913",
-                "onClick": "switchLayoutOrientation",
-                "child": {
-                  "widget": "Icon",
-                  "icon": "screen_rotation_rounded",
-                  "size": 20,
-                  "color": "#FFFFFF"
-                }
-              }
-            },
-            {
-              "widget": "SizedBox",
-              "width": 10
-            }
-          ]
-        }
-        """.trimIndent()
-        val footerComponentConfig = TCICFooterComponentConfig()
-        footerComponentConfig.footerBuilderJson = footerBuilderJson
-        config.footerComponentConfig = footerComponentConfig
-
         val memberListComponentConfig = TCICMembersComponentConfig();
         memberListComponentConfig.teacherRoleBackgroundColor = "#ff0000";
         config.membersComponentConfig = memberListComponentConfig;
