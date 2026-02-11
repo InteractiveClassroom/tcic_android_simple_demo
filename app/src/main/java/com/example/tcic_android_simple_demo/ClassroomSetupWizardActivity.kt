@@ -552,43 +552,102 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
         // 设置mainViewComponentConfig - 自定义课前等待界面
         val mainViewBuilderJson = """
         {
+  "widget": "SizedBox",
+  "expand": true,
+  "child": {
+    "widget": "Stack",
+    "children": [
+      {
+        "widget": "Positioned",
+        "fill": true,
+        "child": {
           "widget": "Box",
-          "padding": 16,
-          "backgroundImage": {
-            "src": "https://tcic-prod-1257307760.qcloudclass.com/doc/gqc7lpugu87e0sruvl2d_tiw/thumbnail/1.jpg",
-            "fit": "fill"
-          },
-          "child": {
-            "widget": "Center",
-            "child": {
-              "widget": "Column",
-              "gap": 18,
-              "align": "center",
-              "mainAxisSize": "min",
-              "crossAlign": "center",
-              "children": [
-                {
-                  "widget": "Text",
-                  "fontSize": 18,
-                  "text": "老师：小张",
-                  "color": "#D9FFFFFF"
-                },
-                {
-                  "widget": "Text",
-                  "fontSize": 16,
-                  "color": "#D9FFFFFF",
-                  "text": "腾讯云互动课堂测试"
-                },
-                {
-                  "widget": "Text",
-                  "fontSize": 14,
-                  "color": "#D9FFFFFF",
-                  "text": "上课时间: 121312313"
-                }
-              ]
+          "background": {
+            "gradient": {
+              "begin": "topLeft",
+              "end": "bottomRight",
+              "colors": ["#0B4DFF", "#6A5CFF", "#0BC6FF"]
             }
           }
         }
+      },
+      {
+        "widget": "Positioned",
+        "fill": true,
+        "child": {
+          "widget": "Opacity",
+          "opacity": 0.22,
+          "child": {
+            "widget": "Image",
+            "src": "https://tcic-prod-1257307760.qcloudclass.com/doc/gqc7lpugu87e0sruvl2d_tiw/thumbnail/1.jpg",
+            "fit": "cover"
+          }
+        }
+      },
+      {
+        "widget": "Positioned",
+        "fill": true,
+        "child": {
+          "widget": "Box",
+          "background": "rgba(0,0,0,0.30)"
+        }
+      },
+      {
+        "widget": "Positioned",
+        "fill": true,
+        "child": {
+          "widget": "SafeArea",
+          "child": {
+            "widget": "Center",
+            "child": {
+              "widget": "Padding",
+              "padding": { "horizontal": 24 },
+              "child": {
+                "widget": "Column",
+                "mainAxisSize": "min",
+                "align": "center",
+                "crossAlign": "center",
+                "gap": 18,
+                "children": [
+                  {
+                    "widget": "Text",
+                    "text": "课堂名称",
+                    "textAlign": "center",
+                    "maxLines": 2,
+                    "overflow": "ellipsis",
+                    "fontSize": 26,
+                    "fontWeight": "w800",
+                    "color": "#FFFFFF"
+                  },
+                  {
+                    "widget": "Text",
+                    "text": "老师：老师名称",
+                    "textAlign": "center",
+                    "maxLines": 1,
+                    "overflow": "ellipsis",
+                    "fontSize": 16,
+                    "fontWeight": "w600",
+                    "color": "rgba(255,255,255,0.92)"
+                  },
+                  {
+                    "widget": "Text",
+                    "text": "上课时间：2026-02-11 10:00",
+                    "textAlign": "center",
+                    "maxLines": 1,
+                    "overflow": "ellipsis",
+                    "fontSize": 14,
+                    "fontWeight": "w600",
+                    "color": "rgba(255,255,255,0.85)"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}
         """.trimIndent()
         val mainViewComponentConfig = TCICMainViewComponentConfig()
         mainViewComponentConfig.builderJson = mainViewBuilderJson
