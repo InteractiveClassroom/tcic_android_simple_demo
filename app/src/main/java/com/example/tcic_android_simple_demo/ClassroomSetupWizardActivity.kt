@@ -537,7 +537,6 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             selectedClassroom.id.toString(),
             info.userId,
         )
-        config.role = 1
         config.headerComponentConfig = headerComponentConfig
 
         // 设置basicConfig - 与iOS保持一致
@@ -650,7 +649,8 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
 }
         """.trimIndent()
         val mainViewComponentConfig = TCICMainViewComponentConfig()
-        mainViewComponentConfig.builderJson = mainViewBuilderJson
+        mainViewComponentConfig.setMainViewBuilder { MainViewNativeViewCreator() }
+        // mainViewComponentConfig.builderJson = mainViewBuilderJson
         config.mainViewComponentConfig = mainViewComponentConfig
 
         val memberListComponentConfig = TCICMembersComponentConfig();
