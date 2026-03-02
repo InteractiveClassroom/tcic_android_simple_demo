@@ -98,9 +98,9 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
                 TCICManager.updateMainViewComponentConfig(null)
             }
             override fun onJoinedClassSuccess() {
-                runOnUiThread {
+//                runOnUiThread {
                     Toast.makeText(this@ClassroomSetupWizardActivity, "加入课堂成功", Toast.LENGTH_SHORT).show()
-                }
+//                }
             }
 
             override fun afterExitedClass() {
@@ -144,13 +144,13 @@ class ClassroomSetupWizardActivity : AppCompatActivity() {
             }
 
             override fun onRecivedMessage(message: Map<*, *>) {
-                runOnUiThread {
-                    Toast.makeText(
-                        this@ClassroomSetupWizardActivity,
-                        "收到消息: $message",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+//                runOnUiThread {
+//                    Toast.makeText(
+//                        this@ClassroomSetupWizardActivity,
+//                        "收到消息: $message",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                }
             }
 
             override fun onError(errorCode: String, errorMsg: String) {
